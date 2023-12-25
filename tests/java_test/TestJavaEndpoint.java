@@ -2,13 +2,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 
-public class test_java-endpoint {
+public class TestJavaEndpoint {
     public static void main(String[] args) {
         // Run for testing
         TreeVisualizer testlayout = new TreeVisualizer();
-        EdgeList testedges = new EdgeList(new int[]{1, 2, 3, 4, 1}, new int[]{2, 3, 4, 1, 3}, new float[]{0.5F, 1.0F, 0.5F, 1.0F, 1.2F});
+        TreeVisualizer.EdgeList testedges = new TreeVisualizer.EdgeList(new int[]{1, 2, 3, 4, 1}, new int[]{2, 3, 4, 1, 3}, new float[]{0.5F, 1.0F, 0.5F, 1.0F, 1.2F});
         System.out.println(testlayout.LayoutFromEdgeList(testedges));
-    }
+        }
 }
 
 

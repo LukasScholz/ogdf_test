@@ -81,7 +81,7 @@ public class ForeignAPI {
 
             // call
             // TODO:
-            tmapLayout.invoke()
+            tmapLayout.invoke();
 
 
         } catch (Throwable e) {
@@ -92,7 +92,8 @@ public class ForeignAPI {
 
 
     public static void main(String[] args) {
-
+        ForeignAPI api = new ForeignAPI();
+        api.testForeignGeneral();
     }
 
 
