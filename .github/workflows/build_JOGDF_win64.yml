@@ -1,0 +1,61 @@
+name: build_JOGDF_win64
+
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2019
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: setup msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            git
+            zip
+            
+      - name: build dependencies
+        shell: msys2 {0}
+        run: |
+          echo Building ogdf
+          cd ogdf
+          cmake .
+          # make -j 1
+
+          echo Building tmap
+          cd ../tmap
+          cmake .
+          # make -j 1
+
+          echo Building Java-tmap Interface
+          cd ..
+          cd src
+          cmake .
+          # make -j 1
+      
+      - name: build jogdf
+        shell: msys2 {0}
+        run: |
+          mkdir build
+          cd build
+          cmake -G "MSYS Makefiles" -DTARGET_ARCH=64 ..
+          cmake --build . --target install -j 1
+
+      - name: Run Test
+        # working-directory: api/build/test
+        # run: ./CLPTest
+        run: echo skipped
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Jogdf_win
+          path: build/native/
+      

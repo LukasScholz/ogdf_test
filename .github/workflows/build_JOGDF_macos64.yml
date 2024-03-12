@@ -1,0 +1,52 @@
+name: build_JOGDF_macos64
+
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-11
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: build dependencies
+        run: |
+          brew install openjdk@11
+          sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+          echo 'export PATH="/usr/local/opt/openjdk@11/bin:$PATH"' >> /Users/runner/.bash_profile
+          export CPPFLAGS="-I/usr/local/opt/openjdk@11/include"
+          echo Building ogdf
+          cd ogdf
+          sudo cmake .
+          sudo make -j 1
+
+          echo Building tmap
+          cd ../tmap
+          sudo cmake .
+          # sudo make -j 1
+
+          echo Building Java-tmap Interface
+          cd ../src
+          sudo cmake .
+          # sudo make -j 1
+      
+      - name: build jogdf
+        run: |
+          mkdir build
+          cd build
+          sudo cmake .. 
+          sudo make -j 1
+          sudo cmake --build . --target install -j 1
+
+      - name: Run Test
+        # working-directory: api/build/test
+        # run: ./CLPTest
+        run: echo skipped
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Jogdf_macos64
+          path: build/native
+      
