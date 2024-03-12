@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 project(ogdf-tmap-wrapper CXX)
+set (CMAKE_CXX_STANDARD 11)
 
 # JNI
 find_package(JNI REQUIRED)
@@ -8,6 +9,7 @@ include_directories(${JNI_INCLUDE_DIRS})
 # OGDF/TMAP
 find_library(OGDF NAMES "ogdf" "OGDF" PATHS "tmap/ogdf-conda/src" REQUIRED)
 find_library(TMAP NAMES "tmap" PATHS "tmap/out/" REQUIRED)
+# NOTE: windows requires .lib files additional to .dll. To find .dll libraries: set(CMAKE_FIND_LIBRARY_SUFFIXES .dll ${CMAKE_FIND_LIBRARY_SUFFIXES})
 
 add_library(LayoutFromEdgeList_internal SHARED LayoutFromEdgeList_internal.cpp LayoutFromEdgeList_internal.hpp)
 add_library(LayoutFromEdgeList_internal_JNI SHARED LayoutFromEdgeList_internal_JNI.cpp)
