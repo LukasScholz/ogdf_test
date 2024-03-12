@@ -1,0 +1,86 @@
+name: build_windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: f-kretschmer/tmap
+          path: tmap
+
+      - name: setup msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: clang64
+          install: >-
+            base-devel
+            mingw-w64-clang-x86_64-toolchain
+            mingw-w64-clang-x86_64-cmake
+            mingw-w64-clang-x86_64-openmp
+            mingw-w64-clang-x86_64-ninja
+            mingw-w64-clang-x86_64-libc++
+            git zip wget unzip
+
+      - name: get OGDF + TMAP binaries
+        run: |
+            wget -c https://github.com/f-kretschmer/tmap/releases/download/0.1/binaries-${{ runner.os }}.zip
+            unzip -j -o binaries-${{ runner.os }}.zip -d binaries
+            mkdir tmap/out
+            mv binaries/*tmap* tmap/out/ # TMAP library
+            mv binaries/* tmap/ogdf-conda/src/ # OGDF+COIN libraries
+
+      - name: create missing OGDF header file by running cmake
+        run: |
+          cd tmap/ogdf-conda/src
+          cmake -DBUILD_SHARED_LIBS=ON -G "Ninja" .
+
+      - name: build test
+        run: |
+          mkdir build
+          cd build
+          cmake -G "Ninja" ..
+          cmake --build .
+
+      - name: get dependencies
+        run: |
+          cd build
+          ldd *.dll
+          # copy all dependencies into this folder
+          cp ../tmap/out/*dll* .            # TMAP
+          cp ../tmap/ogdf-conda/src/*dll* . # OGDF + COIN
+          chmod +x ../install_utils/ldd_dependencies.sh
+          ../install_utils/ldd_dependencies.sh
+          ls -ltrh dependencies
+
+      - name: test
+        run: |
+          cd build
+          # cp dependencies/* .
+          ./LayoutFromEdgeList_test.exe
+
+      - name: make zip of binaries
+        run: |
+          zip -j tmapogdfwrapper-${{ runner.os }}.zip build/*Layout*dll
+          zip -j tmapogdfwrapper_with_dependencies-${{ runner.os }}.zip build/*Layout*dll build/dependencies/*
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            tmapogdfwrapper-${{ runner.os }}.zip
+            tmapogdfwrapper_with_dependencies-${{ runner.os }}.zip
+          tag_name: "0.2"
+
+      - name: Debug with tmate on failure
+        if: ${{ failure()}}
+        uses: mxschmitt/action-tmate@v3
